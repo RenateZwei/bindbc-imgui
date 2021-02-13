@@ -1,4 +1,3 @@
-
 module bindbc.imgui.dynload;
 
 version(BindImGui_Static) {}
@@ -12,55 +11,6 @@ import bindbc.imgui.config,
 private {
     SharedLib lib;
     ImGuiSupport loadedVersion;
-}
-
-alias pInitOpenGLForImGui = void function();
-
-__gshared {
-pInitOpenGLForImGui InitOpenGLForImGui;
-}
-
-bool loadImGuiSupport()
-{
-    // #1778 prevents me from using static arrays here :(
-    version(Windows) {
-        const(char)[][1] libNames = [
-            "imgui_gl_loader.dll",
-        ];
-    }
-    else version(OSX) {
-        const(char)[][1] libNames = [
-            "imgui_gl_loader.dylib"
-        ];
-    }
-    else version(Posix) {
-        const(char)[][2] libNames = [
-            "imgui_gl_loader.so"
-        ];
-    }
-    else static assert(0, "bindbc-ImGui is not yet supported on this platform.");
-
-    bool ret;
-    foreach(name; libNames) {
-        ret = loadImGuiSupport(name.ptr);
-        if(!ret) break;
-    }
-    return ret;
-}
-
-bool loadImGuiSupport(const(char)* libName)
-{
-    lib = load("imgui_gl_loader.dll");
-    if(lib == invalidHandle) {
-        return false;
-    }
-
-    auto errCount = errorCount();
-    loadedVersion = ImGuiSupport.badLibrary;
-
-    lib.bindSymbol(cast(void**)&InitOpenGLForImGui, "InitOpenGLForImGui");
-
-    return true;
 }
 
 void unloadImGui()
@@ -103,8 +53,6 @@ ImGuiSupport loadImGui()
         ret = loadImGui(name.ptr);
         if(ret != ImGuiSupport.noLibrary) break;
     }
-
-    loadImGuiSupport();
 
     return ret;
 }
@@ -1167,21 +1115,14 @@ ImGuiSupport loadImGui(const(char)* libName)
     lib.bindSymbol(cast(void**)&ImFontAtlas_AddFont, "ImFontAtlas_AddFont");
     lib.bindSymbol(cast(void**)&igGetNavInputAmount2d, "igGetNavInputAmount2d");
 
-
-// Backends
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_Shutdown, "ImGui_ImplSDL2_Shutdown");
+    // Backend
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL3_DestroyFontsTexture, "ImGui_ImplOpenGL3_DestroyFontsTexture");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_InitForMetal, "ImGui_ImplSDL2_InitForMetal");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_InitForOpenGL, "ImGui_ImplSDL2_InitForOpenGL");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_InitForVulkan, "ImGui_ImplSDL2_InitForVulkan");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL3_CreateFontsTexture, "ImGui_ImplOpenGL3_CreateFontsTexture");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_MonitorCallback, "ImGui_ImplGlfw_MonitorCallback");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_NewFrame, "ImGui_ImplGlfw_NewFrame");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_CreateDeviceObjects, "ImGui_ImplOpenGL2_CreateDeviceObjects");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_InitForD3D, "ImGui_ImplSDL2_InitForD3D");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_Init, "ImGui_ImplOpenGL2_Init");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_InitForVulkan, "ImGui_ImplGlfw_InitForVulkan");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_ProcessEvent, "ImGui_ImplSDL2_ProcessEvent");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL3_CreateDeviceObjects, "ImGui_ImplOpenGL3_CreateDeviceObjects");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_CharCallback, "ImGui_ImplGlfw_CharCallback");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_DestroyDeviceObjects, "ImGui_ImplOpenGL2_DestroyDeviceObjects");
@@ -1194,14 +1135,12 @@ ImGuiSupport loadImGui(const(char)* libName)
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_KeyCallback, "ImGui_ImplGlfw_KeyCallback");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL3_Shutdown, "ImGui_ImplOpenGL3_Shutdown");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_ScrollCallback, "ImGui_ImplGlfw_ScrollCallback");
-    lib.bindSymbol(cast(void**)&ImGui_ImplSDL2_NewFrame, "ImGui_ImplSDL2_NewFrame");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_CreateFontsTexture, "ImGui_ImplOpenGL2_CreateFontsTexture");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_Shutdown, "ImGui_ImplOpenGL2_Shutdown");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_MouseButtonCallback, "ImGui_ImplGlfw_MouseButtonCallback");
     lib.bindSymbol(cast(void**)&ImGui_ImplGlfw_Shutdown, "ImGui_ImplGlfw_Shutdown");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL3_RenderDrawData, "ImGui_ImplOpenGL3_RenderDrawData");
     lib.bindSymbol(cast(void**)&ImGui_ImplOpenGL2_DestroyFontsTexture, "ImGui_ImplOpenGL2_DestroyFontsTexture");
-
 
     return loadedVersion;
 }
